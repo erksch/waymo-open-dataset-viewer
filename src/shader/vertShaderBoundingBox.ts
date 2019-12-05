@@ -1,4 +1,5 @@
 export default `
+  #define PI 3.1415926538
   precision mediump float;
 
   attribute vec3 position;
@@ -9,10 +10,14 @@ export default `
   uniform mat4 modelViewMatrix;
   uniform mat4 projectionMatrix;
 
+  varying vec3 vPosition;
+
   void main() {
+    float headingShifted = PI / 2.0 - heading;
+
     mat4 rotationMatrix;
-    rotationMatrix[0] = vec4(cos(heading), -sin(heading), 0.0, 0.0);
-    rotationMatrix[1] = vec4(sin(heading), cos(heading), 0.0, 0.0);
+    rotationMatrix[0] = vec4(cos(headingShifted), -sin(headingShifted), 0.0, 0.0);
+    rotationMatrix[1] = vec4(sin(headingShifted), cos(headingShifted), 0.0, 0.0);
     rotationMatrix[2] = vec4(0.0, 0.0, 1.0, 0.0);
     rotationMatrix[3] = vec4(offset.x, offset.y, offset.z, 1.0);
 
@@ -28,6 +33,7 @@ export default `
     translationMatrix[2] = vec4(0.0, 0.0, 1.0, 0.0);
     translationMatrix[3] = vec4(offset.x, offset.y, offset.z, 1.0);
 
+    vPosition = position;
     gl_Position = projectionMatrix * modelViewMatrix * rotationMatrix * scaleMatrix * vec4(position / 2.0, 1.0);
   }
 `;
