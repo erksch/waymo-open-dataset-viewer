@@ -13,11 +13,17 @@ export default `
   varying vec3 vPosition;
 
   void main() {
-    float headingShifted = PI / 2.0 - heading;
+    mat4 translationMatrix;
+    translationMatrix[0] = vec4(1.0, 0.0, 0.0, 0.0);
+    translationMatrix[1] = vec4(0.0, 1.0, 0.0, 0.0);
+    translationMatrix[2] = vec4(0.0, 0.0, 1.0, 0.0);
+    translationMatrix[3] = vec4(offset.x, offset.y, offset.z, 1.0);
+
+    float theta = PI / 2.0 + heading;
 
     mat4 rotationMatrix;
-    rotationMatrix[0] = vec4(cos(headingShifted), -sin(headingShifted), 0.0, 0.0);
-    rotationMatrix[1] = vec4(sin(headingShifted), cos(headingShifted), 0.0, 0.0);
+    rotationMatrix[0] = vec4(cos(theta), -sin(theta), 0.0, 0.0);
+    rotationMatrix[1] = vec4(sin(theta), cos(theta), 0.0, 0.0);
     rotationMatrix[2] = vec4(0.0, 0.0, 1.0, 0.0);
     rotationMatrix[3] = vec4(offset.x, offset.y, offset.z, 1.0);
 
@@ -27,13 +33,9 @@ export default `
     scaleMatrix[2] = vec4(0.0, 0.0, dimension.z, 0.0);
     scaleMatrix[3] = vec4(0.0, 0.0, 0.0, 1.0);
 
-    mat4 translationMatrix;
-    translationMatrix[0] = vec4(1.0, 0.0, 0.0, 0.0);
-    translationMatrix[1] = vec4(0.0, 1.0, 0.0, 0.0);
-    translationMatrix[2] = vec4(0.0, 0.0, 1.0, 0.0);
-    translationMatrix[3] = vec4(offset.x, offset.y, offset.z, 1.0);
+    mat4 modelMatrix = rotationMatrix * scaleMatrix;
 
     vPosition = position;
-    gl_Position = projectionMatrix * modelViewMatrix * rotationMatrix * scaleMatrix * vec4(position / 2.0, 1.0);
+    gl_Position = projectionMatrix * modelViewMatrix * modelMatrix * vec4(position / 2.0, 1.0);
   }
 `;

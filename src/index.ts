@@ -63,11 +63,13 @@ function main() {
     const lines = text.split(/\r\n|\n/);
     const numPoints = Number(lines[0]);
     const points = [];
-    
+    const labels = [];
+
     lines.slice(2).forEach((line) => {
       if (line === '') return;
-      const [x, y, z] = line.split(' ').slice(1).map(i => Number(i));
+      const [label, x, y, z] = line.split(' ').map(i => Number(i));
       points.push(x, y, z);
+      labels.push(label);
     });
 
     const geometry = new THREE.InstancedBufferGeometry();
@@ -75,6 +77,7 @@ function main() {
     geometry.setIndex(pointIndices);
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pointVertices), 3));
     geometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(points), 3 ));
+    geometry.setAttribute('type', new THREE.InstancedBufferAttribute(new Float32Array(labels), 1));
     
     const mesh = new THREE.Mesh(geometry, pointMaterial);
     mesh.scale.x = 0.2;
