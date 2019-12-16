@@ -4,9 +4,11 @@ export default `
   attribute vec3 position;
   attribute vec3 offset;
   attribute float type;
+  attribute float predictedType;
 
   uniform mat4 modelViewMatrix;
   uniform mat4 projectionMatrix;
+  uniform float labelMode;
 
   varying float vType;
 
@@ -27,7 +29,11 @@ export default `
 
     mat4 viewMatrix = translationMatrix * scaleMatrix;
 
-    vType = type;
+    if (labelMode == 1.0) {
+      vType = type;
+    } else {
+      vType = predictedType;
+    }
 
     gl_Position = projectionMatrix * modelViewMatrix * viewMatrix * vec4(position, 1.0);
   }

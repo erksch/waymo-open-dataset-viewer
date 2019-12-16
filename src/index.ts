@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import io from 'socket.io-client';
+import axios from 'axios';
 const OrbitControls = require('three-orbitcontrols');
 import { indices as pointIndices, vertices as pointVertices } from './geometry/pointGeometry';
 import { indices as cubeIndices, vertices as cubeVertices } from './geometry/cubeGeometry';
@@ -8,11 +10,12 @@ import vertShaderBoundingBox from './shader/vertShaderBoundingBox';
 import fragShaderBoundingBox from './shader/fragShaderBoundingBox';
 
 function main() {
+  const canvas = document.querySelector<HTMLCanvasElement>("#canvas");
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  const camera = new THREE.PerspectiveCamera( 75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000 );
   camera.position.set(0, 1, -3)
   camera.lookAt(new THREE.Vector3());
-  const renderer = new THREE.WebGLRenderer({ alpha: true });
+  const renderer = new THREE.WebGLRenderer({ alpha: true, canvas });
 
   renderer.setSize( window.innerWidth, window.innerHeight );
   document.body.appendChild(renderer.domElement);
@@ -37,11 +40,20 @@ function main() {
   const pointFilesInput = document.querySelector<HTMLInputElement>('#point-files-input');
   const pointFilesLoaded = document.querySelector<HTMLSpanElement>('#point-files-loaded');
   const pointFilesTotal = document.querySelector<HTMLSpanElement>('#point-files-total');
+  const labelModeInputs = document.getElementsByName('label-mode');
+  let labelMode = 'ground_truth';
 
-  const framePointMeshes = [];
-  const frameLabelMeshes = [];
+  labelModeInputs.forEach((el: HTMLInputElement) => el.addEventListener<'change'>('change', (e: any) => {
+    labelMode = e.target.value;
+  }));
+
+  const framePointMeshes: THREE.Mesh[] = [];
+  const frameLabelMeshes: THREE.Mesh[] = [];
 
   const pointMaterial = new THREE.RawShaderMaterial({
+    uniforms: {
+      labelMode: { value: 1.0 }
+    },
     vertexShader: vertShaderPoint,
     fragmentShader: fragShaderPoint,
     side: THREE.DoubleSide,
@@ -55,6 +67,7 @@ function main() {
     transparent: true,
   });
 
+  /*
   const handlePointFileRead = (fileName: string) => (progressEvent) => {
     const text = progressEvent.target.result;
     if (typeof text !== 'string') return;
@@ -105,7 +118,8 @@ function main() {
       reader.readAsText(file);
     }
   });
-
+  */
+  /*
   const handleLabelFileRead = (fileName: string) => (progressEvent) => {
     const text = progressEvent.target.result;
     if (typeof text !== 'string') return;
@@ -157,9 +171,12 @@ function main() {
       reader.readAsText(file);
     }
   });
+  */
+
+  let activeFrame = Number(frameSelector.value);
 
   frameSelector.addEventListener('change', () => {
-    const activeFrame = Number(frameSelector.value);
+    activeFrame = Number(frameSelector.value);
 
     if (activeFrame > framePointMeshes.length - 1) {
       frameSelector.value = (framePointMeshes.length - 1).toString();
@@ -177,7 +194,84 @@ function main() {
       scene.add(frameLabelMeshes[activeFrame]);
   });
 
+  const runPredictionButton = document.querySelector<HTMLButtonElement>('#run-prediction');
+
+  runPredictionButton.addEventListener('click', async () => {
+    const loading = document.querySelector<HTMLSpanElement>('#loading-prediction');
+    loading.style.display = "block";
+    runPredictionButton.style.display = "none";
+    const { data: labels } = await axios.post('http://localhost:8080/predict', {
+      filepath: "/home/erik/Projects/notebooks/pointclouds/segment-15578655130939579324_620_000_640_000/point_clouds2/frame_000_170081.csv",
+    });
+    loading.style.display = "none";
+    runPredictionButton.style.display = "block";
+
+    console.log(labels.length);
+
+    (framePointMeshes[0] as any).geometry.setAttribute('predictedType', new THREE.InstancedBufferAttribute(new Float32Array(labels), 1));
+    (framePointMeshes[0] as any).geometry.attributes.predictedType.needsUpdate = true;
+  });
+
+  console.log('Receiving frame');
+
+  let index = 0;
+  const websocket = new WebSocket('ws://localhost:9000');
+  websocket.binaryType = 'arraybuffer';
+  websocket.onopen = () => {
+    console.log('Websocket open');
+    websocket.send('transmit_0');
+  };
+  websocket.onclose = () => {
+    console.log('Websocket closed');
+  };
+  websocket.onerror = () => {
+    console.log('Websocket error');
+  };
+  websocket.onmessage = (event) => {
+    index++;
+    if (index < 199) {
+      websocket.send('transmit_' + index);
+    }
+    const data = new Float32Array(event.data); 
+  
+    const offsets = [];
+    const intensities = [];
+    const labels = [];
+    const predictedTypes = [];
+
+    data.forEach((x, index) => {
+      if ([0, 1, 2].includes(index % 5)) offsets.push(x);
+      else if (index % 5 === 3) intensities.push(x);
+      else if (index % 5 === 4) labels.push(x);
+      if (index % 5 === 0) predictedTypes.push(-1);
+    });
+
+    const geometry = new THREE.InstancedBufferGeometry();
+    geometry.maxInstancedCount = intensities.length;
+    geometry.setIndex(pointIndices);
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pointVertices), 3));
+    geometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(offsets), 3 ));
+    geometry.setAttribute('type', new THREE.InstancedBufferAttribute(new Float32Array(labels), 1));
+    geometry.setAttribute('predictedType', new THREE.InstancedBufferAttribute(new Float32Array(predictedTypes), 1));
+    
+    const mesh = new THREE.Mesh(geometry, pointMaterial);
+    mesh.scale.x = 0.2;
+    mesh.scale.y = 0.2;
+    mesh.scale.z = 0.2;
+
+    framePointMeshes[index - 1] = mesh;
+
+    if (index - 1 === 0) {
+      scene.add(framePointMeshes[0]);
+    }
+    pointFilesLoaded.innerHTML = (Number(pointFilesLoaded.innerHTML) + 1).toString();
+  };
+
+  
   function render() {
+    framePointMeshes.forEach((mesh: any) => {
+      mesh.material.uniforms.labelMode.value = labelMode === 'ground_truth' ? 1.0 : 0.0;
+    });
     renderer.render(scene, camera);
     requestAnimationFrame(render);
   }
