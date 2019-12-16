@@ -5,6 +5,7 @@ export default `
 
   void main() {
     vec3 labelColors[5];
+    vec3 notLabeledColor = vec3(0.2, 0.2, 0.2);
 
     labelColors[0] = vec3(1.0, 1.0, 1.0);
     labelColors[1] = vec3(1.0, 0.0, 0.0);
@@ -22,7 +23,9 @@ export default `
       labelColor = labelColors[3];
     } else if (vType == 4.0) {
       labelColor = labelColors[4];
-    } 
+    } else if (vType == -1.0) {
+      labelColor = notLabeledColor;
+    }
 
     gl_FragColor = vec4(labelColor, 1.0);
   }
