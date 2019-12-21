@@ -38,8 +38,10 @@ function main() {
   const labelFilesTotal = document.querySelector<HTMLSpanElement>('#label-files-total');
 
   const pointFilesInput = document.querySelector<HTMLInputElement>('#point-files-input');
-  const pointFilesLoaded = document.querySelector<HTMLSpanElement>('#point-files-loaded');
-  const pointFilesTotal = document.querySelector<HTMLSpanElement>('#point-files-total');
+
+  const activeFrameDisplay = document.querySelector<HTMLSpanElement>('#active-frame');
+  const framesLoadedDisplay = document.querySelector<HTMLSpanElement>('#frames-loaded');
+
   const labelModeInputs = document.getElementsByName('label-mode');
   let labelMode = 'ground_truth';
 
@@ -52,7 +54,7 @@ function main() {
 
   const pointMaterial = new THREE.RawShaderMaterial({
     uniforms: {
-      labelMode: { value: 1.0 }
+      labelMode: { value: 1.0 },
     },
     vertexShader: vertShaderPoint,
     fragmentShader: fragShaderPoint,
@@ -175,8 +177,9 @@ function main() {
 
   let activeFrame = Number(frameSelector.value);
 
-  frameSelector.addEventListener('change', () => {
+  frameSelector.addEventListener('input', () => {
     activeFrame = Number(frameSelector.value);
+    activeFrameDisplay.innerHTML = activeFrame.toString();
 
     if (activeFrame > framePointMeshes.length - 1) {
       frameSelector.value = (framePointMeshes.length - 1).toString();
@@ -201,7 +204,7 @@ function main() {
     loading.style.display = "block";
     runPredictionButton.style.display = "none";
     const { data: labels } = await axios.post('http://localhost:8080/predict', {
-      filepath: "/home/erik/Projects/notebooks/pointclouds/segment-15578655130939579324_620_000_640_000/point_clouds2/frame_000_170081.csv",
+      filepath: "/home/erik/Projects/notebooks/pointclouds/segment-15578655130939579324_620_000_640_000/point_clouds3/frame_000_170081.csv",
     });
     loading.style.display = "none";
     runPredictionButton.style.display = "block";
@@ -211,8 +214,6 @@ function main() {
     (framePointMeshes[0] as any).geometry.setAttribute('predictedType', new THREE.InstancedBufferAttribute(new Float32Array(labels), 1));
     (framePointMeshes[0] as any).geometry.attributes.predictedType.needsUpdate = true;
   });
-
-  console.log('Receiving frame');
 
   let index = 0;
   const websocket = new WebSocket('ws://localhost:9000');
@@ -264,13 +265,20 @@ function main() {
     if (index - 1 === 0) {
       scene.add(framePointMeshes[0]);
     }
-    pointFilesLoaded.innerHTML = (Number(pointFilesLoaded.innerHTML) + 1).toString();
+
+    framesLoadedDisplay.innerHTML = (Number(framesLoadedDisplay.innerHTML) + 1).toString();
+    frameSelector.max = (Number(framesLoadedDisplay.innerHTML)).toString();
   };
 
   
   function render() {
     framePointMeshes.forEach((mesh: any) => {
-      mesh.material.uniforms.labelMode.value = labelMode === 'ground_truth' ? 1.0 : 0.0;
+      mesh.material.uniforms = {
+        ...mesh.material.uniforms,
+        labelMode: {
+          value: labelMode === 'ground_truth' ? 1.0 : 0.0,
+        },
+      };
     });
     renderer.render(scene, camera);
     requestAnimationFrame(render);
