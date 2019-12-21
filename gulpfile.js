@@ -10,8 +10,11 @@ var watchedBrowserify = watchify(browserify({
   debug: true,
   entries: ['src/index.ts'],
   cache: {},
-  packageCache: {}
-}).plugin(tsify));
+  packageCache: {},
+}).plugin(tsify), { 
+  ignoreWatch: true,
+  delay: 500, 
+});
 
 function bundle() {
   return watchedBrowserify
