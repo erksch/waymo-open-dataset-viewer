@@ -20,6 +20,13 @@
 			</div>
 			-->
 			<div class="inputs-row">
+				<h3>Segment</h3>
+				<div class="input-button-group">
+					<input type="text" id="segment-input" placeholder="Segment-ID" />
+					<button id="load-segment-button">Load</button>
+				</div>
+			</div>
+			<div class="inputs-row">
 				<h3>Active Frame</h3>
 				<div style="display: flex; align-items: center; justify-content: space-between; max-width: 100%;">
 					<button id="play-button">&#9654; &nbsp; Play</button>
@@ -30,14 +37,25 @@
 				<input type="range" min="0" max="0" value="0" id="active-frame-input" />
 			</div>
 			<div class="inputs-row">
+				<h3>Color by</h3>
+				<label class="switch-label">
+					<input type="radio" name="color-mode" value="LABEL" checked="checked" />
+					<span>Label</span>
+				</label>
+				<label class="switch-label">
+					<input type="radio" name="color-mode" value="INTENSITY" />
+					<span>Intensity</span>
+				</label>
+			</div>
+			<div class="inputs-row">
 				<h3>Labels</h3>
 				<div class="switch">
 					<label class="switch-label">
-						<input type="radio" name="label-mode" value="ground_truth" checked="checked" />
+						<input type="radio" name="label-mode" value="GROUND_TRUTH" checked="checked" />
 						<span>Ground truth</span>
 					</label>
 					<label class="switch-label">
-						<input type="radio" name="label-mode" value="prediction" />
+						<input type="radio" name="label-mode" value="PREDICTION" />
 						<span>Prediction</span>
 					</label>
 				</div>
