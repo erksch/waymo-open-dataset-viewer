@@ -115,3 +115,22 @@ button {
   background-color: white;
   cursor: pointer;
 }
+input[type=text] {
+  color: white;
+  background-color: transparent;
+  border: 2px solid white;
+  padding: 10px;
+  text-align: center;
+  outline: none;
+}
+.input-button-group {
+  flex: 1;
+  display: flex;
+}
+.input-button-group input {
+  width: 0;
+  flex: 1;
+}
+.input-button-group button {
+ border-left: none; 
+}

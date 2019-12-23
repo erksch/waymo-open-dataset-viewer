@@ -5,15 +5,38 @@ export default `
   attribute vec3 offset;
   attribute float type;
   attribute float predictedType;
+  attribute float intensity;
 
   uniform mat4 viewMatrix;
   uniform mat4 modelViewMatrix;
   uniform mat4 projectionMatrix;
-  uniform float labelMode;
 
-  varying float vType;
+  uniform float labelMode;
+  uniform float colorMode;
+
+  varying vec3 vColor;
   varying vec3 vPosition;
-  varying float vZ;
+
+  vec3 getColorForLabel(float label) {
+    vec3 labelColor;
+    vec3 notLabeledColor = vec3(0.2, 0.2, 0.2);
+
+    if (label == 0.0) {
+      labelColor = vec3(1.0, 1.0, 1.0);
+    } else if (label == 1.0) {
+      labelColor = vec3(1.0, 0.0, 0.0);
+    } else if (label == 2.0) {
+      labelColor = vec3(1.0, 1.0, 0.0);
+    } else if (label == 3.0) {
+      labelColor = vec3(0.0, 1.0, 0.0);
+    } else if (label == 4.0) {
+      labelColor = vec3(0.0, 0.0, 1.0);
+    } else {
+      labelColor = notLabeledColor;
+    }
+
+    return labelColor;
+  }
 
   void main() {
     float scale = 0.08;
@@ -31,15 +54,22 @@ export default `
     scaleMatrix[3] = vec4(0.0, 0.0, 0.0, 1.0);
 
     // mat4 viewMatrix = translationMatrix * scaleMatrix;
+    
+    if (colorMode == 0.0) {
+      float label;
 
-    if (labelMode == 1.0) {
-      vType = type;
-    } else {
-      vType = predictedType;
+      if (labelMode == 1.0) {
+        label = type;
+      } else {
+        label = predictedType;
+      }
+
+      vColor = getColorForLabel(label);
+    } else if (colorMode == 1.0) {
+      vColor = vec3(intensity, intensity, intensity);
     }
 
     vPosition = position;
-    vZ = offset.z;
 
 
     vec3 cameraRight = vec3(viewMatrix[0].x, viewMatrix[1].x, viewMatrix[2].x);
