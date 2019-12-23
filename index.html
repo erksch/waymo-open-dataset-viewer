@@ -21,20 +21,29 @@
 			-->
 			<div class="inputs-row">
 				<h3>Segment</h3>
-				<div class="input-button-group">
-					<input type="text" id="segment-input" placeholder="Segment-ID" />
-					<button id="load-segment-button">Load</button>
-				</div>
+				<button id="segment-id-button">
+					<input type="text" id="segment-id-input" placeholder="Segment-ID" />
+					<span>▼</span>
+					<div class="dropdown" id="segment-id-dropdown"></div>
+				</button>
+				<!--<button id="load-segment-button">Load</button>-->
 			</div>
 			<div class="inputs-row">
-				<h3>Active Frame</h3>
-				<div style="display: flex; align-items: center; justify-content: space-between; max-width: 100%;">
-					<button id="play-button">&#9654; &nbsp; Play</button>
-					<span id="active-frame">0</span>
+				<h3>Frames</h3>
+				<div style="display: flex; align-items: center; max-width: 100%; margin-bottom: 10px;">
+					<span style="flex: 1; text-align: center;">Active</span>
+					<span style="flex: 1; text-align: center;">Loaded</span>
+					<span style="flex: 1; text-align: center;">Total</span>
+				</div>
+				<div style="display: flex; align-items: center; max-width: 100%;">
+					<span style="flex: 1; text-align: center;" id="active-frame">0</span>
 					<span>/</span>
-					<span id="frames-loaded">0</span>
+					<span style="flex: 1; text-align: center;" id="frames-loaded">0</span>
+					<span>/</span>
+					<span style="flex: 1; text-align: center;" id="frames-total">0</span>
 				</div>
 				<input type="range" min="0" max="0" value="0" id="active-frame-input" />
+				<!--<button id="play-button">&#9654; &nbsp; Play</button>-->
 			</div>
 			<div class="inputs-row">
 				<h3>Color by</h3>
