@@ -1,14 +1,8 @@
 import * as THREE from 'three';
-import io from 'socket.io-client';
 import axios from 'axios';
 const OrbitControls = require('three-orbitcontrols');
-import { indices as pointIndices, vertices as pointVertices } from './geometry/pointGeometry';
-import { indices as cubeIndices, vertices as cubeVertices } from './geometry/cubeGeometry';
-import vertShaderPoint from './shader/vertShaderPoint';
-import fragShaderPoint from './shader/fragShaderPoint';
-import vertShaderBoundingBox from './shader/vertShaderBoundingBox';
-import fragShaderBoundingBox from './shader/fragShaderBoundingBox';
 import { labelModes, colorModes } from './constants';
+import PointMesh from './PointMesh';
 
 function main() {
   const canvas = document.querySelector<HTMLCanvasElement>("#canvas");
@@ -59,76 +53,6 @@ function main() {
   const framePointMeshes: THREE.Mesh[] = [];
   const frameLabelMeshes: THREE.Mesh[] = [];
 
-  const pointMaterial = new THREE.RawShaderMaterial({
-    uniforms: {
-      labelMode: { value: labelMode },
-      colorMode: { value: colorMode },
-    },
-    vertexShader: vertShaderPoint,
-    fragmentShader: fragShaderPoint,
-    side: THREE.DoubleSide,
-    transparent: true,
-  });
-
-  const boundingBoxMaterial = new THREE.RawShaderMaterial({
-    vertexShader: vertShaderBoundingBox,
-    fragmentShader: fragShaderBoundingBox,
-    side: THREE.DoubleSide,
-    transparent: true,
-  });
-
-  /*
-  const handlePointFileRead = (fileName: string) => (progressEvent) => {
-    const text = progressEvent.target.result;
-    if (typeof text !== 'string') return;
-
-    const frameIndex = Number(fileName.match(/\d+/));
-    const lines = text.split(/\r\n|\n/);
-    const numPoints = Number(lines[0]);
-    const points = [];
-    const labels = [];
-
-    lines.slice(2).forEach((line) => {
-      if (line === '') return;
-      const [label, x, y, z] = line.split(' ').map(i => Number(i));
-      points.push(x, y, z);
-      labels.push(label);
-    });
-
-    const geometry = new THREE.InstancedBufferGeometry();
-    geometry.maxInstancedCount = numPoints;
-    geometry.setIndex(pointIndices);
-    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pointVertices), 3));
-    geometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(points), 3 ));
-    geometry.setAttribute('type', new THREE.InstancedBufferAttribute(new Float32Array(labels), 1));
-    
-    const mesh = new THREE.Mesh(geometry, pointMaterial);
-    mesh.scale.x = 0.2;
-    mesh.scale.y = 0.2;
-    mesh.scale.z = 0.2;
-
-    framePointMeshes[frameIndex] = mesh;
-
-    if (frameIndex === 0) {
-      scene.add(mesh);
-    }
-
-    pointFilesLoaded.innerHTML = (Number(pointFilesLoaded.innerHTML) + 1).toString();
-    console.log(`Loaded points for frame ${frameIndex}.`);
-  };
-
-  pointFilesInput.addEventListener('change', () => {
-    const { files } = pointFilesInput;
-    pointFilesTotal.innerHTML = files.length.toString();
-
-    for (let i = 0; i < files.length; i++) {
-      const reader = new FileReader();
-      reader.onload = handlePointFileRead(files[i].name);
-      const file = files.item(i);
-      reader.readAsText(file);
-    }
-  });
-  */
   /*
   const handleLabelFileRead = (fileName: string) => (progressEvent) => {
     const text = progressEvent.target.result;
@@ -147,15 +71,7 @@ function main() {
       headings.push(label.box.heading);
     });
 
-    const geometry = new THREE.InstancedBufferGeometry();
-    geometry.maxInstancedCount = numBoundingBoxes;
-    geometry.setIndex(cubeIndices);
-    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(cubeVertices), 3));
-    geometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(offsets), 3));
-    geometry.setAttribute('dimension', new THREE.InstancedBufferAttribute(new Float32Array(dimensions), 3));
-    geometry.setAttribute('heading', new THREE.InstancedBufferAttribute(new Float32Array(headings), 1));
-    
-    const mesh = new THREE.Mesh(geometry, boundingBoxMaterial);
+   
     mesh.scale.x = 0.2;
     mesh.scale.y = 0.2;
     mesh.scale.z = 0.2;
@@ -240,7 +156,7 @@ function main() {
   websocket.binaryType = 'arraybuffer';
   websocket.onopen = () => {
     console.log('Websocket open');
-    websocket.send('start_transmission');
+    websocket.send('transmit_0');
   };
   websocket.onclose = () => {
     console.log('Websocket closed');
@@ -269,16 +185,16 @@ function main() {
       if (index % 5 === 0) predictedTypes.push(-1);
     });
 
-    const geometry = new THREE.InstancedBufferGeometry();
-    geometry.maxInstancedCount = intensities.length;
-    geometry.setIndex(pointIndices);
-    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pointVertices), 3));
-    geometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(offsets), 3));
-    geometry.setAttribute('intensity', new THREE.InstancedBufferAttribute(new Float32Array(intensities), 1));
-    geometry.setAttribute('type', new THREE.InstancedBufferAttribute(new Float32Array(labels), 1));
-    geometry.setAttribute('predictedType', new THREE.InstancedBufferAttribute(new Float32Array(predictedTypes), 1));
-    
-    const mesh = new THREE.Mesh(geometry, pointMaterial);
+    const mesh = (new PointMesh(
+      intensities.length,
+      offsets,
+      intensities,
+      labels,
+      predictedTypes,
+      labelMode,
+      colorMode,
+    )).getMesh();
+
     mesh.scale.x = 0.2;
     mesh.scale.y = 0.2;
     mesh.scale.z = 0.2;
