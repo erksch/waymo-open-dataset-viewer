@@ -8,6 +8,7 @@ import vertShaderPoint from './shader/vertShaderPoint';
 import fragShaderPoint from './shader/fragShaderPoint';
 import vertShaderBoundingBox from './shader/vertShaderBoundingBox';
 import fragShaderBoundingBox from './shader/fragShaderBoundingBox';
+import { labelModes, colorModes } from './constants';
 
 function main() {
   const canvas = document.querySelector<HTMLCanvasElement>("#canvas");
@@ -43,10 +44,16 @@ function main() {
   const framesLoadedDisplay = document.querySelector<HTMLSpanElement>('#frames-loaded');
 
   const labelModeInputs = document.getElementsByName('label-mode');
-  let labelMode = 'ground_truth';
+  let labelMode = labelModes.GROUND_TRUTH;
 
   labelModeInputs.forEach((el: HTMLInputElement) => el.addEventListener<'change'>('change', (e: any) => {
-    labelMode = e.target.value;
+    labelMode = labelModes[e.target.value];
+  }));
+
+  let colorMode = colorModes.LABEL;
+  const colorModeInputs = document.getElementsByName('color-mode');
+  colorModeInputs.forEach((el: HTMLInputElement) => el.addEventListener<'change'>('change', (e: any) => {
+    colorMode = colorModes[e.target.value];
   }));
 
   const framePointMeshes: THREE.Mesh[] = [];
@@ -54,7 +61,8 @@ function main() {
 
   const pointMaterial = new THREE.RawShaderMaterial({
     uniforms: {
-      labelMode: { value: 1.0 },
+      labelMode: { value: labelMode },
+      colorMode: { value: colorMode },
     },
     vertexShader: vertShaderPoint,
     fragmentShader: fragShaderPoint,
@@ -177,24 +185,36 @@ function main() {
 
   let activeFrame = Number(frameSelector.value);
 
-  frameSelector.addEventListener('input', () => {
-    activeFrame = Number(frameSelector.value);
-    activeFrameDisplay.innerHTML = activeFrame.toString();
-
-    if (activeFrame > framePointMeshes.length - 1) {
-      frameSelector.value = (framePointMeshes.length - 1).toString();
-      return;
-    }
-
+  const clearScene = () => {
     scene.children.forEach((child) => {
       scene.remove(child);
     });
+  };
+
+  const setActiveFrame = (nextActiveFrame: number) => {
+    if (nextActiveFrame > framePointMeshes.length - 1) return;
+    activeFrame = nextActiveFrame;
+    activeFrameDisplay.innerHTML = activeFrame.toString();
+
+    clearScene();
 
     if (framePointMeshes[activeFrame])
       scene.add(framePointMeshes[activeFrame]);
 
     if (frameLabelMeshes[activeFrame])
       scene.add(frameLabelMeshes[activeFrame]);
+  };
+
+  frameSelector.addEventListener('input', () => {
+    setActiveFrame(Number(frameSelector.value));
+  });
+
+  const playButton = document.querySelector<HTMLButtonElement>('#play-button');
+
+  playButton.addEventListener('click', () => {
+    setInterval(() => {
+      setActiveFrame(activeFrame + 1);
+    }, 100);
   });
 
   const runPredictionButton = document.querySelector<HTMLButtonElement>('#run-prediction');
@@ -220,7 +240,7 @@ function main() {
   websocket.binaryType = 'arraybuffer';
   websocket.onopen = () => {
     console.log('Websocket open');
-    websocket.send('transmit_0');
+    websocket.send('start_transmission');
   };
   websocket.onclose = () => {
     console.log('Websocket closed');
@@ -230,11 +250,13 @@ function main() {
   };
   websocket.onmessage = (event) => {
     index++;
+    /*
     if (index < 199) {
       websocket.send('transmit_' + index);
     }
-    const data = new Float32Array(event.data); 
-  
+    */
+    const data = new Float32Array(event.data);
+
     const offsets = [];
     const intensities = [];
     const labels = [];
@@ -251,7 +273,8 @@ function main() {
     geometry.maxInstancedCount = intensities.length;
     geometry.setIndex(pointIndices);
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pointVertices), 3));
-    geometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(offsets), 3 ));
+    geometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(offsets), 3));
+    geometry.setAttribute('intensity', new THREE.InstancedBufferAttribute(new Float32Array(intensities), 1));
     geometry.setAttribute('type', new THREE.InstancedBufferAttribute(new Float32Array(labels), 1));
     geometry.setAttribute('predictedType', new THREE.InstancedBufferAttribute(new Float32Array(predictedTypes), 1));
     
@@ -273,12 +296,8 @@ function main() {
   
   function render() {
     framePointMeshes.forEach((mesh: any) => {
-      mesh.material.uniforms = {
-        ...mesh.material.uniforms,
-        labelMode: {
-          value: labelMode === 'ground_truth' ? 1.0 : 0.0,
-        },
-      };
+      mesh.material.uniforms.labelMode.value = labelMode;
+      mesh.material.uniforms.colorMode.value = colorMode;
     });
     renderer.render(scene, camera);
     requestAnimationFrame(render);
