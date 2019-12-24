@@ -49,6 +49,18 @@ function main() {
     colorMode = colorModes[e.target.value];
   }));
 
+  let laserSwitches = {
+    TOP: 1.0,
+    FRONT: 1.0,
+    SIDE_LEFT: 1.0,
+    SIDE_RIGHT: 1.0,
+    REAR: 1.0,
+  };
+  const laserInputs = document.getElementsByName('lasers');
+  laserInputs.forEach((el: HTMLInputElement) => el.addEventListener<'change'>('change', (e: any) => {
+    laserSwitches[el.value] = e.target.checked ? 1.0 : 0.0;
+  }));
+
   let framePointMeshes: THREE.Mesh[] = [];
   let frameLabelMeshes: THREE.Mesh[] = [];
 
@@ -203,6 +215,11 @@ function main() {
     framePointMeshes.forEach((mesh: any) => {
       mesh.material.uniforms.labelMode.value = labelMode;
       mesh.material.uniforms.colorMode.value = colorMode;
+      mesh.material.uniforms.laserTop.value = laserSwitches.TOP;
+      mesh.material.uniforms.laserFront.value = laserSwitches.FRONT;
+      mesh.material.uniforms.laserSideLeft.value = laserSwitches.SIDE_LEFT;
+      mesh.material.uniforms.laserSideRight.value = laserSwitches.SIDE_RIGHT;
+      mesh.material.uniforms.laserRear.value = laserSwitches.REAR;
     });
     renderer.render(scene, camera);
     requestAnimationFrame(render);

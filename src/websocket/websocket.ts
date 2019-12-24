@@ -22,7 +22,7 @@ class DataSocket {
   }
 
   public start() {
-    this.websocket = new WebSocket('ws://138.68.105.82:9000');
+    this.websocket = new WebSocket('ws://localhost:9000');
     this.websocket.binaryType = 'arraybuffer';
 
     this.websocket.onopen = this.onOpen;
@@ -72,20 +72,25 @@ class DataSocket {
 
     const offsets = [];
     const intensities = [];
+    const lasers = [];
     const labels = [];
     const predictedTypes = [];
 
     data.forEach((x, index) => {
-      if ([0, 1, 2].includes(index % 5)) offsets.push(x);
-      else if (index % 5 === 3) intensities.push(x);
-      else if (index % 5 === 4) labels.push(x);
-      if (index % 5 === 0) predictedTypes.push(-1);
+      if ([0, 1, 2].includes(index % 6)) offsets.push(x);
+      else if (index % 6 === 3) intensities.push(x);
+      else if (index % 6 === 4) lasers.push(x);
+      else if (index % 6 === 5) labels.push(x);
+      if (index % 6 === 0) predictedTypes.push(-1);
     });
+
+    console.log(lasers);
 
     const mesh = (new PointMesh(
       intensities.length,
       offsets,
       intensities,
+      lasers,
       labels,
       predictedTypes,
     )).getMesh();

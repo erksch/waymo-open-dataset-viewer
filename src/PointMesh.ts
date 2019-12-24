@@ -8,6 +8,11 @@ const material = new THREE.RawShaderMaterial({
   uniforms: {
     labelMode: { value: labelModes.GROUND_TRUTH },
     colorMode: { value: colorModes.LABEL },
+    laserTop: { value: 1.0 },
+    laserFront: { value: 1.0 },
+    laserSideLeft: { value: 1.0 },
+    laserSideRight: { value: 1.0 },
+    laserRear: { value: 1.0 },
   },
   vertexShader: vertShaderPoint,
   fragmentShader: fragShaderPoint,
@@ -23,6 +28,7 @@ class PointMesh {
     instances: number,
     offsets: number[],
     intensities: number[],
+    lasers: number[],
     labels: number[],
     predictedTypes: number[],
   ) {
@@ -32,6 +38,7 @@ class PointMesh {
     this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
     this.geometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(offsets), 3));
     this.geometry.setAttribute('intensity', new THREE.InstancedBufferAttribute(new Float32Array(intensities), 1));
+    this.geometry.setAttribute('laser', new THREE.InstancedBufferAttribute(new Float32Array(lasers), 1));
     this.geometry.setAttribute('type', new THREE.InstancedBufferAttribute(new Float32Array(labels), 1));
     this.geometry.setAttribute('predictedType', new THREE.InstancedBufferAttribute(new Float32Array(predictedTypes), 1));
     
