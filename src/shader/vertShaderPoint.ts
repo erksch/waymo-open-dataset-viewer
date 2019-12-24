@@ -6,6 +6,7 @@ export default `
   attribute float type;
   attribute float predictedType;
   attribute float intensity;
+  attribute float laser;
 
   uniform mat4 viewMatrix;
   uniform mat4 modelViewMatrix;
@@ -16,6 +17,7 @@ export default `
 
   varying vec3 vColor;
   varying vec3 vPosition;
+  varying float vLaser;
 
   vec3 getColorForLabel(float label) {
     vec3 labelColor;
@@ -70,6 +72,7 @@ export default `
     }
 
     vPosition = position;
+    vLaser = laser;
 
 
     vec3 cameraRight = vec3(viewMatrix[0].x, viewMatrix[1].x, viewMatrix[2].x);
