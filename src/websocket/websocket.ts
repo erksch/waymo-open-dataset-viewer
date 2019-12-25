@@ -77,7 +77,6 @@ class DataSocket {
 
     const data = new Float32Array(event.data);
     const numCols = 8;
-    console.log(data);
 
     const offsets = [];
     const dimensions = [];

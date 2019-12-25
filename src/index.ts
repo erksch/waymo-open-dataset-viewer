@@ -64,52 +64,6 @@ function main() {
   let framePointMeshes: THREE.Mesh[] = [];
   let frameBoundingBoxMeshes: THREE.Mesh[] = [];
 
-  /*
-  const handleLabelFileRead = (fileName: string) => (progressEvent) => {
-    const text = progressEvent.target.result;
-    if (typeof text !== 'string') return;
-    const data = JSON.parse(text);
-    
-    const frameIndex = Number(fileName.match(/\d+/));
-    const numBoundingBoxes = data.length;
-    const offsets = [];
-    const dimensions = [];
-    const headings = [];
-
-    data.forEach((label) => {
-      offsets.push(label.box.center_x, label.box.center_y, label.box.center_z);
-      dimensions.push(label.box.width, label.box.length, label.box.height);
-      headings.push(label.box.heading);
-    });
-
-   
-    mesh.scale.x = 0.2;
-    mesh.scale.y = 0.2;
-    mesh.scale.z = 0.2;
-
-    frameLabelMeshes[frameIndex] = mesh;
-
-    if (frameIndex === 0) {
-      scene.add(mesh);
-    }
-    
-    labelFilesLoaded.innerHTML = (Number(labelFilesLoaded.innerHTML) + 1).toString();
-    console.log(`Loaded labels for frame ${frameIndex}.`);
-  };
-
-  labelFilesInput.addEventListener('change', () => {
-    const { files } = labelFilesInput;
-    labelFilesTotal.innerHTML = files.length.toString();
-
-    for (let i = 0; i < files.length; i++) {
-      const reader = new FileReader();
-      reader.onload = handleLabelFileRead(files[i].name);
-      const file = files.item(i);
-      reader.readAsText(file);
-    }
-  });
-  */
-
   document.querySelector('#segment-id-button').addEventListener('click', () => {
     const dropdown = document.querySelector<HTMLDivElement>('#segment-id-dropdown');
     dropdown.style.display = dropdown.style.display === 'flex' ? 'none' : 'flex';
@@ -165,8 +119,6 @@ function main() {
     });
     loading.style.display = "none";
     runPredictionButton.style.display = "block";
-
-    console.log(labels.length);
 
     (framePointMeshes[0] as any).geometry.setAttribute('predictedType', new THREE.InstancedBufferAttribute(new Float32Array(labels), 1));
     (framePointMeshes[0] as any).geometry.attributes.predictedType.needsUpdate = true;
