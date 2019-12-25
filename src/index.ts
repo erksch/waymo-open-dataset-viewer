@@ -72,9 +72,9 @@ function main() {
   let activeFrame = Number(frameSelector.value);
 
   const clearScene = () => {
-    scene.children.forEach((child) => {
-      scene.remove(child);
-    });
+    while (scene.children.length) {
+      scene.remove(scene.children[0]);
+    }
   };
 
   const setActiveFrame = (nextActiveFrame: number) => {
@@ -146,6 +146,7 @@ function main() {
   const handleSegmentChange = ([segmentId, numFrames]: Segment) => {
     clearScene();
     activeFrame = 0;
+    activeFrameDisplay.innerHTML = "0";
     framePointMeshes = [];
     frameBoundingBoxMeshes = [];
     framesLoadedDisplay.innerHTML = "0";
