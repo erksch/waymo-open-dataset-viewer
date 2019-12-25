@@ -5,14 +5,13 @@ export type Segment = [string, number];
 
 class DataSocket {
   private websocket: WebSocket;
-  private expectingBoundingBoxMessage: boolean = false;
-  private frameIndex: number = 0;
   private segment: Segment;
+  private segments: Segment[];
+  
   private onFramePointCloudReceived: (index: number, mesh: THREE.Mesh) => void; 
   private onFrameBoundingBoxesReceived: (index: number, mesh: THREE.Mesh) => void; 
   private onSegmentChange: (segment: Segment) => void;
   private onSegmentsReceived: (segments: [string, number][], self: DataSocket) => void;
-  private segments: Segment[];
 
   constructor(
     onFramePointCloudReceived: (index: number, mesh: THREE.Mesh) => void,
@@ -38,12 +37,11 @@ class DataSocket {
     this.websocket.addEventListener('message', function (event: MessageEvent) { this_.onMessage(this, event); });
   }
 
-  public changeSegment(segment: Segment) {
+  public async changeSegment(segment: Segment) {
     this.onSegmentChange(segment);
     this.segment = segment;
-    this.frameIndex = 0;
-    this.expectingBoundingBoxMessage = false;
-    this.websocket.send(`${segment[0]}_${this.frameIndex}_pointcloud`);
+    this.websocket.send(`${segment[0]}_0_pointcloud`);
+    this.websocket.send(`${segment[0]}_0_labels`);
   }
 
   private onOpen() {
@@ -67,15 +65,15 @@ class DataSocket {
     this.onSegmentsReceived(this.segments, this);
   }
 
-  private handleBoundingBoxesMessage(websocket: WebSocket, event: MessageEvent) {
-    this.expectingBoundingBoxMessage = false;
-    this.frameIndex++;
-
-    if (this.frameIndex < this.segment[1]) {
-      websocket.send(`${this.segment[0]}_${this.frameIndex}_pointcloud`);
+  private handleBoundingBoxesMessage(websocket: WebSocket, segmentId: string, frameIndex: number, data: Float32Array) {
+    if (segmentId.substr(0, 5) !== this.segment[0].substr(0, 5)) {
+      return;
+    }
+    
+    if (frameIndex < this.segment[1] - 1) {
+      websocket.send(`${this.segment[0]}_${frameIndex + 1}_labels`);
     }
 
-    const data = new Float32Array(event.data);
     const numCols = 8;
 
     const offsets = [];
@@ -93,14 +91,17 @@ class DataSocket {
     mesh.scale.y = 0.2;
     mesh.scale.z = 0.2;
 
-    this.onFrameBoundingBoxesReceived(this.frameIndex - 1, mesh);
+    this.onFrameBoundingBoxesReceived(frameIndex, mesh);
   }
 
-  private handlePointCloudMessage(websocket: WebSocket, event: MessageEvent) {
-    this.expectingBoundingBoxMessage = true;
-    websocket.send(`${this.segment[0]}_${this.frameIndex}_labels`);
-
-    const data = new Float32Array(event.data);
+  private handlePointCloudMessage(websocket: WebSocket, segmentId: string, frameIndex: number, data: Float32Array) {
+    if (segmentId.substr(0, 5) !== this.segment[0].substr(0, 5)) {
+      return;
+    }
+    
+    if (frameIndex < this.segment[1] - 1) {
+      websocket.send(`${this.segment[0]}_${frameIndex + 1}_pointcloud`);
+    }
 
     const offsets = [];
     const intensities = [];
@@ -129,7 +130,7 @@ class DataSocket {
     mesh.scale.y = 0.2;
     mesh.scale.z = 0.2;
 
-    this.onFramePointCloudReceived(this.frameIndex, mesh);
+    this.onFramePointCloudReceived(frameIndex, mesh);
   }
   
   private onMessage(websocket: WebSocket, event: MessageEvent) {
@@ -137,12 +138,15 @@ class DataSocket {
       // Received comma separated list of supported segment ids
       this.handleSegmentsMessage(websocket, event);
     } else {
-      if (this.expectingBoundingBoxMessage) {
-        // Received binary bounding box data
-        this.handleBoundingBoxesMessage(websocket, event);
-      } else {
+      const [type, segmentId, frameIndex, ...rest] = new Float32Array(event.data);
+      const data = new Float32Array(rest);
+
+      if (type === 0) {
         // Received binary point cloud data
-        this.handlePointCloudMessage(websocket, event);
+        this.handlePointCloudMessage(websocket, segmentId.toString(), frameIndex, data);
+      } else if (type === 1) {
+        // Received binary bounding box data
+        this.handleBoundingBoxesMessage(websocket, segmentId.toString(), frameIndex, data);
       }
     }
   }
