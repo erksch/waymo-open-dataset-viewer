@@ -83,7 +83,7 @@ function main() {
       return;
     }
     activeFrame = nextActiveFrame;
-    activeFrameDisplay.innerHTML = activeFrame.toString();
+    activeFrameDisplay.innerHTML = (activeFrame + 1).toString();
 
     clearScene();
 
@@ -137,6 +137,7 @@ function main() {
 
     if (index === 0) {
       scene.add(framePointMeshes[index]);
+      activeFrameDisplay.innerHTML = "1";
     }
 
     const numFrames = framePointMeshes.filter(value => !!value).length;
