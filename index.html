@@ -47,37 +47,46 @@
 			</div>
 			<div class="inputs-row">
 				<h3>Lasers</h3>
-				<label>
-					<input type="checkbox" name="lasers" value="TOP" checked="checked" />
-					<span>Top</span>
-				</label>
-				<label>
-					<input type="checkbox" name="lasers" value="FRONT" checked="checked" />
-					<span>Front</span>
-				</label>
-				<label>
-					<input type="checkbox" name="lasers" value="SIDE_LEFT" checked="checked" />
-					<span>Side Left</span>
-				</label>
-				<label>
-					<input type="checkbox" name="lasers" value="SIDE_RIGHT" checked="checked" />
-					<span>Side Right</span>
-				</label>
-				<label>
-					<input type="checkbox" name="lasers" value="REAR" checked="checked" />
-					<span>Rear</span>
-				</label>
+				<div id="laser-car">
+					<label id="laser-car-top">
+						<input type="checkbox" name="lasers" value="TOP" checked="checked" />
+						<div class="indicator"></div>
+						<span>Top</span>
+					</label>
+					<label  id="laser-car-front">
+						<input type="checkbox" name="lasers" value="FRONT" checked="checked" />
+						<div class="indicator"></div>
+						<span>Front</span>
+					</label>
+					<label  id="laser-car-side-left">
+						<input type="checkbox" name="lasers" value="SIDE_LEFT" checked="checked" />
+						<div class="indicator"></div>
+						<span>Side Left</span>
+					</label>
+					<label  id="laser-car-side-right">
+						<input type="checkbox" name="lasers" value="SIDE_RIGHT" checked="checked" />
+						<div class="indicator"></div>
+						<span>Side Right</span>
+					</label>
+					<label  id="laser-car-rear">
+						<input type="checkbox" name="lasers" value="REAR" checked="checked" />
+						<div class="indicator"></div>
+						<span>Rear</span>
+					</label>
+				</div>
 			</div>
 			<div class="inputs-row">
 				<h3>Color by</h3>
-				<label class="switch-label">
-					<input type="radio" name="color-mode" value="LABEL" checked="checked" />
-					<span>Label</span>
-				</label>
-				<label class="switch-label">
-					<input type="radio" name="color-mode" value="INTENSITY" />
-					<span>Intensity</span>
-				</label>
+				<div class="switch">
+					<label class="switch-label">
+						<input type="radio" name="color-mode" value="LABEL" checked="checked" />
+						<span>Label</span>
+					</label>
+					<label class="switch-label">
+						<input type="radio" name="color-mode" value="INTENSITY" />
+						<span>Intensity</span>
+					</label>
+				</div>
 			</div>
 			<div class="inputs-row">
 				<h3>Labels</h3>

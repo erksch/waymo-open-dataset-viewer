@@ -3,8 +3,14 @@ import { indices, vertices } from './geometry/cubeGeometry';
 import vertShaderBoundingBox from './shader/vertShaderBoundingBox';
 import fragShaderBoundingBox from './shader/fragShaderBoundingBox';
 
+const material = new THREE.RawShaderMaterial({
+  vertexShader: vertShaderBoundingBox,
+  fragmentShader: fragShaderBoundingBox,
+  side: THREE.DoubleSide,
+  transparent: true,
+});
+
 class BoundingBoxMesh {
-  private material: THREE.RawShaderMaterial;
   private geometry: THREE.InstancedBufferGeometry;
   private mesh: THREE.Mesh;
 
@@ -14,13 +20,6 @@ class BoundingBoxMesh {
     dimensions: number[],
     headings: number[],
   ) { 
-    this.material = new THREE.RawShaderMaterial({
-      vertexShader: vertShaderBoundingBox,
-      fragmentShader: fragShaderBoundingBox,
-      side: THREE.DoubleSide,
-      transparent: true,
-    });
-
     this.geometry = new THREE.InstancedBufferGeometry();
     this.geometry.maxInstancedCount = instances;
     this.geometry.setIndex(indices);
@@ -29,7 +28,7 @@ class BoundingBoxMesh {
     this.geometry.setAttribute('dimension', new THREE.InstancedBufferAttribute(new Float32Array(dimensions), 3));
     this.geometry.setAttribute('heading', new THREE.InstancedBufferAttribute(new Float32Array(headings), 1));
         
-    this.mesh = new THREE.Mesh(this.geometry, this.material);
+    this.mesh = new THREE.Mesh(this.geometry, material);
   }
 
   getMesh() {

@@ -62,7 +62,7 @@ function main() {
   }));
 
   let framePointMeshes: THREE.Mesh[] = [];
-  let frameLabelMeshes: THREE.Mesh[] = [];
+  let frameBoundingBoxMeshes: THREE.Mesh[] = [];
 
   /*
   const handleLabelFileRead = (fileName: string) => (progressEvent) => {
@@ -136,8 +136,8 @@ function main() {
     if (framePointMeshes[activeFrame])
       scene.add(framePointMeshes[activeFrame]);
 
-    if (frameLabelMeshes[activeFrame])
-      scene.add(frameLabelMeshes[activeFrame]);
+    if (frameBoundingBoxMeshes[activeFrame])
+      scene.add(frameBoundingBoxMeshes[activeFrame]);
   };
 
   frameSelector.addEventListener('input', () => {
@@ -172,6 +172,14 @@ function main() {
     (framePointMeshes[0] as any).geometry.attributes.predictedType.needsUpdate = true;
   });
 
+  const handleFrameBoundingBoxesReceived = (index: number, mesh: THREE.Mesh) => {
+    frameBoundingBoxMeshes[index] = mesh;
+
+    if (index === 0) {
+      scene.add(frameBoundingBoxMeshes[index]);
+    }
+  }
+
   const handleFramePointCloudReceived = (index: number, mesh: THREE.Mesh) => {
     framePointMeshes[index] = mesh;
 
@@ -185,8 +193,9 @@ function main() {
 
   const handleSegmentChange = ([segmentId, numFrames]: Segment) => {
     clearScene();
+    activeFrame = 0;
     framePointMeshes = [];
-    frameLabelMeshes = [];
+    frameBoundingBoxMeshes = [];
     framesLoadedDisplay.innerHTML = "0";
     document.querySelector('#frames-total').innerHTML = numFrames.toString();
     document.querySelector<HTMLInputElement>('#segment-id-input').value = segmentId;
@@ -208,7 +217,12 @@ function main() {
     });
   };
 
-  const socket = new DataSocket(handleFramePointCloudReceived, handleSegmentChange, handleSegmentsReceived);
+  const socket = new DataSocket(
+    handleFramePointCloudReceived, 
+    handleFrameBoundingBoxesReceived,
+    handleSegmentChange, 
+    handleSegmentsReceived,
+  );
   socket.start();
 
   function render() {

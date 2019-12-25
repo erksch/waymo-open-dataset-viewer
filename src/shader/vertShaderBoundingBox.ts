@@ -13,13 +13,7 @@ export default `
   varying vec3 vPosition;
 
   void main() {
-    mat4 translationMatrix;
-    translationMatrix[0] = vec4(1.0, 0.0, 0.0, 0.0);
-    translationMatrix[1] = vec4(0.0, 1.0, 0.0, 0.0);
-    translationMatrix[2] = vec4(0.0, 0.0, 1.0, 0.0);
-    translationMatrix[3] = vec4(offset.x, offset.y, offset.z, 1.0);
-
-    float theta = PI / 2.0 + heading;
+    float theta = PI / 2.0 - heading;
 
     mat4 rotationMatrix;
     rotationMatrix[0] = vec4(cos(theta), -sin(theta), 0.0, 0.0);
@@ -29,8 +23,8 @@ export default `
 
     mat4 scaleMatrix;
     scaleMatrix[0] = vec4(dimension.x, 0.0, 0.0, 0.0);
-    scaleMatrix[1] = vec4(0.0, dimension.y, 0.0, 0.0);
-    scaleMatrix[2] = vec4(0.0, 0.0, dimension.z, 0.0);
+    scaleMatrix[1] = vec4(0.0, dimension.z, 0.0, 0.0);
+    scaleMatrix[2] = vec4(0.0, 0.0, dimension.y, 0.0);
     scaleMatrix[3] = vec4(0.0, 0.0, 0.0, 1.0);
 
     mat4 modelMatrix = rotationMatrix * scaleMatrix;
