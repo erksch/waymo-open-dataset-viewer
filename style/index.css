@@ -34,10 +34,13 @@ input[type="number"] {
 }
 .switch {
   display: flex;
-  border: 2px solid white;
+  border-radius: 40px;
+  border: 1px solid hsl(0, 0%, 20%);
+  background-color: black;
 }
 .switch-label {
   flex: 1;
+  cursor: pointer;
 }
 .switch-label span {
   display: block;
@@ -47,6 +50,7 @@ input[type="number"] {
 .switch-label input:checked + span {
   background-color: white;
   color: black;
+  border-radius: 40px;
 }
 .switch-label input {
   display: none;
@@ -61,6 +65,7 @@ button {
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  border-radius: 30px;
 }
 .inputs {
   position: absolute;
@@ -106,12 +111,14 @@ button {
   height: 4px;
   background-color: white;
   outline: none;
+  border-radius: 10px;
 }
 #active-frame-input::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 8px;
-  height: 25px;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
   background-color: white;
   cursor: pointer;
 }
@@ -119,7 +126,7 @@ input[type=text] {
   color: white;
   background-color: transparent;
   border: 2px solid white;
-  padding: 10px;
+  padding: 10px 20px;
   text-align: center;
   outline: none;
 }
@@ -141,6 +148,8 @@ input[type=text] {
   outline: none;
   font-weight: normal;
   position: relative;
+  border-radius: 40px;
+  background-color: black;
 }
 
 #segment-id-button span {
@@ -157,8 +166,8 @@ input[type=text] {
 }
 
 .dropdown {
-  height: 300px;
-  overflow-y: scroll;
+  max-height: 300px;
+  overflow-y: auto;
   display: none;
   background-color: black;
   flex-direction: column;
@@ -167,7 +176,8 @@ input[type=text] {
   border-top: none;
   left: -2px;
   right: -2px;
-  top: calc(100% + 2px);
+  top: calc(100% + 5px);
+  border: 1px solid hsl(0, 0%, 20%);
 }
 
 .dropdown button {
@@ -179,5 +189,81 @@ input[type=text] {
 }
 
 .dropdown button + button {
-  border-top: 2px solid white;
+  border-top: 1px solid hsl(0, 0%, 20%);
+}
+
+#laser-car {
+  border-radius: 20px;
+  border: 3px solid white;
+  position: relative;
+  width: 160px;
+  height: 70px;
+  align-self: center;
+}
+
+#laser-car label {
+  cursor: pointer;
+  position: absolute;
+} 
+
+#laser-car label input{
+  display: none;
+} 
+
+#laser-car label span {
+  display: block;
+  position: absolute;
+  font-weight: bold;
+  font-size: 10px;
+  text-transform: uppercase;
+  background-color: black;
+  margin-top: 4px;
+  text-align: center;
+  display: none;
+}
+
+#laser-car label .indicator {
+  background-color: gray;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+#laser-car label input:checked ~ .indicator {
+  background-color: hsl(100, 100%, 60%);
+} 
+
+#laser-car-top {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#laser-car-top .indicator {
+  width: 30px !important;
+  height: 30px !important;
+}
+
+#laser-car-front {
+  left: 100%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#laser-car-rear {
+  left: 0%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#laser-car-side-left {
+  right: 10%;
+  top: 0%;
+  transform: translate(-50%, -50%);
+}
+
+#laser-car-side-right {
+  right: 10%;
+  top: 100%;
+  transform: translate(-50%, -50%);
 }
