@@ -166,7 +166,7 @@ input[type=text] {
 }
 
 .dropdown {
-  max-height: 300px;
+  max-height: 200px;
   overflow-y: auto;
   display: none;
   background-color: black;
@@ -176,6 +176,7 @@ input[type=text] {
   border-top: none;
   left: -2px;
   right: -2px;
+  z-index: 1000;
   top: calc(100% + 12px);
   border: 1px solid hsl(0, 0%, 20%);
   border-radius: 4px;
