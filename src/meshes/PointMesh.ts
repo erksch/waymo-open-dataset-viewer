@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { indices, vertices } from './geometry/pointGeometry';
-import vertShaderPoint from './shader/vertShaderPoint';
-import fragShaderPoint from './shader/fragShaderPoint';
-import { labelModes, colorModes } from './constants';
+import { indices, vertices } from '../geometry/pointGeometry';
+import vertShaderPoint from '../shader/vertShaderPoint';
+import fragShaderPoint from '../shader/fragShaderPoint';
+import { labelModes, colorModes } from '../constants';
 
 const material = new THREE.RawShaderMaterial({
   uniforms: {

@@ -1,80 +1,43 @@
 import * as THREE from 'three';
-import axios from 'axios';
-import { fromEvent } from 'rxjs';
-const OrbitControls = require('three-orbitcontrols');
 import { labelModes, colorModes } from './constants';
-import DataSocket, { Segment } from './websocket/websocket';
+import DataSocket, { SegmentMetadata } from './websocket/websocket';
+import setupRenderer from './setupRenderer';
+import runPrediction from './prediction/runPrediction';
+import { BufferGeometry, BufferAttribute, Mesh, RawShaderMaterial } from 'three';
 
 function main() {
-  const canvas = document.querySelector<HTMLCanvasElement>("#canvas");
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-  camera.position.set(0, 1, -3);
-  camera.lookAt(new THREE.Vector3());
-  const renderer = new THREE.WebGLRenderer({ alpha: true, canvas });
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-  
-	if (renderer.extensions.get('ANGLE_instanced_arrays') === null) {
-		return;
-  }
-
-  camera.position.z = 5;
-  
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.25;
-  controls.enableZoom = true;
+  const { renderer, scene, camera, clearScene } = setupRenderer();
 
   const frameSelector = document.querySelector<HTMLInputElement>('#active-frame-input');
-
-  const labelFilesInput = document.querySelector<HTMLInputElement>('#label-files-input');
-  const labelFilesLoaded = document.querySelector<HTMLSpanElement>('#label-files-loaded');
-  const labelFilesTotal = document.querySelector<HTMLSpanElement>('#label-files-total');
-
-  const pointFilesInput = document.querySelector<HTMLInputElement>('#point-files-input');
-
   const activeFrameDisplay = document.querySelector<HTMLSpanElement>('#active-frame');
   const framesLoadedDisplay = document.querySelector<HTMLSpanElement>('#frames-loaded');
+  const framesTotalDisplay = document.querySelector<HTMLSpanElement>('#frames-total');
+  const loadingIndicator = document.querySelector<HTMLSpanElement>('#loading');
 
+  const segmentInput = document.querySelector<HTMLButtonElement>('#segment-id-input');
+  const segmentButton = document.querySelector<HTMLButtonElement>('#segment-id-button');
+  const segmentDropdown = document.querySelector<HTMLDivElement>('#segment-id-dropdown');
+
+  const runPredictionButton = document.querySelector<HTMLButtonElement>('#run-prediction');
+  const loadingPrediction = document.querySelector<HTMLSpanElement>('#loading-prediction');
+  
   const labelModeInputs = document.getElementsByName('label-mode');
-  let labelMode = labelModes.GROUND_TRUTH;
-
-  labelModeInputs.forEach((el: HTMLInputElement) => el.addEventListener<'change'>('change', (e: any) => {
-    labelMode = labelModes[e.target.value];
-  }));
-
-  let colorMode = colorModes.LABEL;
   const colorModeInputs = document.getElementsByName('color-mode');
-  colorModeInputs.forEach((el: HTMLInputElement) => el.addEventListener<'change'>('change', (e: any) => {
-    colorMode = colorModes[e.target.value];
-  }));
+  const laserInputs = document.getElementsByName('lasers');
+  
+  let framePointMeshes: THREE.Mesh[] = [];
+  let frameBoundingBoxMeshes: THREE.Mesh[] = [];
 
+  // configuration
+  let activeFrame = Number(frameSelector.value);
+  let labelMode = labelModes.GROUND_TRUTH;
+  let colorMode = colorModes.LABEL;
   let laserSwitches = {
     TOP: 1.0,
     FRONT: 1.0,
     SIDE_LEFT: 1.0,
     SIDE_RIGHT: 1.0,
     REAR: 1.0,
-  };
-  const laserInputs = document.getElementsByName('lasers');
-  laserInputs.forEach((el: HTMLInputElement) => el.addEventListener<'change'>('change', (e: any) => {
-    laserSwitches[el.value] = e.target.checked ? 1.0 : 0.0;
-  }));
-
-  let framePointMeshes: THREE.Mesh[] = [];
-  let frameBoundingBoxMeshes: THREE.Mesh[] = [];
-
-  document.querySelector('#segment-id-button').addEventListener('click', () => {
-    const dropdown = document.querySelector<HTMLDivElement>('#segment-id-dropdown');
-    dropdown.style.display = dropdown.style.display === 'flex' ? 'none' : 'flex';
-  });
-
-  let activeFrame = Number(frameSelector.value);
-
-  const clearScene = () => {
-    while (scene.children.length) {
-      scene.remove(scene.children[0]);
-    }
   };
 
   const setActiveFrame = (nextActiveFrame: number) => {
@@ -94,34 +57,35 @@ function main() {
       scene.add(frameBoundingBoxMeshes[activeFrame]);
   };
 
+  labelModeInputs.forEach((el: HTMLInputElement) => el.addEventListener<'change'>('change', (e: any) => {
+    labelMode = labelModes[e.target.value];
+  }));
+
+  colorModeInputs.forEach((el: HTMLInputElement) => el.addEventListener<'change'>('change', (e: any) => {
+    colorMode = colorModes[e.target.value];
+  }));
+
+  laserInputs.forEach((el: HTMLInputElement) => el.addEventListener<'change'>('change', (e: any) => {
+    laserSwitches[el.value] = e.target.checked ? 1.0 : 0.0;
+  }));
+
+  segmentButton.addEventListener('click', () => {
+    segmentDropdown.style.display = segmentDropdown.style.display === 'flex' ? 'none' : 'flex';
+  });
+
   frameSelector.addEventListener('input', () => {
     setActiveFrame(Number(frameSelector.value));
   });
-
-  /*
-  const playButton = document.querySelector<HTMLButtonElement>('#play-button');
-
-  playButton.addEventListener('click', () => {
-    setInterval(() => {
-      setActiveFrame(activeFrame + 1);
-    }, 100);
-  });
-  */
-
-  const runPredictionButton = document.querySelector<HTMLButtonElement>('#run-prediction');
-
+  
   runPredictionButton.addEventListener('click', async () => {
-    const loading = document.querySelector<HTMLSpanElement>('#loading-prediction');
-    loading.style.display = "block";
+    loadingPrediction.style.display = "block";
     runPredictionButton.style.display = "none";
-    const { data: labels } = await axios.post('http://localhost:8080/predict', {
-      filepath: "/home/erik/Projects/notebooks/pointclouds/segment-15578655130939579324_620_000_640_000/point_clouds3/frame_000_170081.csv",
-    });
-    loading.style.display = "none";
+    const { frameIndex, labels } = await runPrediction();
+    loadingPrediction.style.display = "none";
     runPredictionButton.style.display = "block";
 
-    (framePointMeshes[0] as any).geometry.setAttribute('predictedType', new THREE.InstancedBufferAttribute(new Float32Array(labels), 1));
-    (framePointMeshes[0] as any).geometry.attributes.predictedType.needsUpdate = true;
+    (framePointMeshes[frameIndex].geometry as BufferGeometry).setAttribute('predictedType', new THREE.InstancedBufferAttribute(new Float32Array(labels), 1));
+    ((framePointMeshes[frameIndex].geometry as BufferGeometry).attributes.predictedType as BufferAttribute).needsUpdate = true;
   });
 
   const handleFrameBoundingBoxesReceived = (index: number, mesh: THREE.Mesh) => {
@@ -133,6 +97,7 @@ function main() {
   }
 
   const handleFramePointCloudReceived = (index: number, mesh: THREE.Mesh) => {
+    loadingIndicator.style.display = 'none';
     framePointMeshes[index] = mesh;
 
     if (index === 0) {
@@ -144,30 +109,32 @@ function main() {
     framesLoadedDisplay.innerHTML = numFrames.toString();
   };
 
-  const handleSegmentChange = ([segmentId, numFrames]: Segment) => {
+  const handleSegmentChange = (segmentId: string) => {
     clearScene();
     activeFrame = 0;
     activeFrameDisplay.innerHTML = "0";
     framePointMeshes = [];
     frameBoundingBoxMeshes = [];
     framesLoadedDisplay.innerHTML = "0";
-    document.querySelector('#frames-total').innerHTML = numFrames.toString();
-    document.querySelector<HTMLInputElement>('#segment-id-input').value = segmentId;
-    frameSelector.max = numFrames.toString();
+    segmentInput.value = segmentId;
   };
 
-  const handleSegmentsReceived = (segments: Segment[], dataSocket: DataSocket) => {
-    const sortedSegments = segments.sort((a, b) => a[0].localeCompare(b[0]));
-    const dropdown = document.querySelector("#segment-id-dropdown");
+  const handleSegmentMetadataReceived = (metadata: SegmentMetadata) => {
+    framesTotalDisplay.innerHTML = metadata.size.toString();
+    frameSelector.max = metadata.size.toString();
+  }
+
+  const handleSegmentsReceived = (segments: string[], dataSocket: DataSocket) => {
+    const sortedSegments = segments.sort();
     dataSocket.changeSegment(sortedSegments[0]);
     
-    sortedSegments.forEach(([id, numFrames]) => {
+    sortedSegments.forEach((segmentId) => {
       const el = document.createElement("button");
-      el.innerHTML = id;
+      el.innerHTML = segmentId;
       el.addEventListener('click', () => {
-        dataSocket.changeSegment([id, numFrames]);
+        dataSocket.changeSegment(segmentId);
       });
-      dropdown.appendChild(el);
+      segmentDropdown.appendChild(el);
     });
   };
 
@@ -176,11 +143,16 @@ function main() {
     handleFrameBoundingBoxesReceived,
     handleSegmentChange, 
     handleSegmentsReceived,
+    handleSegmentMetadataReceived,
   );
   socket.start();
 
   function render() {
-    framePointMeshes.forEach((mesh: any) => {
+    framePointMeshes.forEach((mesh: Mesh) => {
+      if (!(mesh.material instanceof RawShaderMaterial)) {
+        return;
+      }
+
       mesh.material.uniforms.labelMode.value = labelMode;
       mesh.material.uniforms.colorMode.value = colorMode;
       mesh.material.uniforms.laserTop.value = laserSwitches.TOP;

@@ -1,28 +1,34 @@
-import PointMesh from '../PointMesh';
-import BoundingBoxMesh from '../BoundingBoxMesh';
+import PointMesh from '../meshes/PointMesh';
+import BoundingBoxMesh from '../meshes/BoundingBoxMesh';
 
-export type Segment = [string, number];
+export interface SegmentMetadata {
+  size: number;
+}
 
 class DataSocket {
   private websocket: WebSocket;
-  private segment: Segment;
-  private segments: Segment[];
+  private segment: string;
+  private segmentMetadata: SegmentMetadata;
+  private segments: string[];
   
   private onFramePointCloudReceived: (index: number, mesh: THREE.Mesh) => void; 
   private onFrameBoundingBoxesReceived: (index: number, mesh: THREE.Mesh) => void; 
-  private onSegmentChange: (segment: Segment) => void;
-  private onSegmentsReceived: (segments: [string, number][], self: DataSocket) => void;
+  private onSegmentChange: (segment: string) => void;
+  private onSegmentsReceived: (segments: string[], self: DataSocket) => void;
+  private onSegmentMetadataReceived: (metadata: SegmentMetadata) => void;
 
   constructor(
     onFramePointCloudReceived: (index: number, mesh: THREE.Mesh) => void,
     onFrameBoundingBoxesReceived: (index: number, mesh: THREE.Mesh) => void,
-    onSegmentChange: (segment: Segment) => void, 
-    onSegmentsReceived: (segments: Segment[], self: DataSocket) => void,
+    onSegmentChange: (segment: string) => void, 
+    onSegmentsReceived: (segments: string[], self: DataSocket) => void,
+    onSegmentMetadataReceived: (metadata: SegmentMetadata) => void,
   ) {
     this.onFramePointCloudReceived = onFramePointCloudReceived;
     this.onFrameBoundingBoxesReceived = onFrameBoundingBoxesReceived;
     this.onSegmentChange = onSegmentChange;
     this.onSegmentsReceived = onSegmentsReceived;
+    this.onSegmentMetadataReceived = onSegmentMetadataReceived;
   }
 
   public start() {
@@ -37,11 +43,12 @@ class DataSocket {
     this.websocket.addEventListener('message', function (event: MessageEvent) { this_.onMessage(this, event); });
   }
 
-  public async changeSegment(segment: Segment) {
-    this.onSegmentChange(segment);
-    this.segment = segment;
-    this.websocket.send(`${segment[0]}_0_pointcloud`);
-    this.websocket.send(`${segment[0]}_0_labels`);
+  public async changeSegment(segmentId: string) {
+    this.onSegmentChange(segmentId);
+    this.segment = segmentId;
+    this.websocket.send(`${segmentId}_0_segment`);
+    this.websocket.send(`${segmentId}_0_pointcloud`);
+    this.websocket.send(`${segmentId}_0_labels`);
   }
 
   private onOpen() {
@@ -57,21 +64,29 @@ class DataSocket {
   }
 
   private handleSegmentsMessage(websocket: WebSocket, event: MessageEvent) {
-    this.segments = event.data.split(',').map((s: string) => { 
-      const [id, numFrames] = s.split('_');
-      return [id, Number(numFrames)];
-    });
-
+    this.segments = event.data.split(',');
     this.onSegmentsReceived(this.segments, this);
   }
 
+  private handleSegmentMetadataMessage(websocket: WebSocket, segmentId: string, data: Float32Array) {
+    if (segmentId.substr(0, 5) !== this.segment.substr(0, 5)) {
+      return;
+    }
+
+    const [size] = data;
+    const metadata = { size };
+    this.segmentMetadata = metadata;
+
+    this.onSegmentMetadataReceived(metadata);
+  }
+
   private handleBoundingBoxesMessage(websocket: WebSocket, segmentId: string, frameIndex: number, data: Float32Array) {
-    if (segmentId.substr(0, 5) !== this.segment[0].substr(0, 5)) {
+    if (segmentId.substr(0, 5) !== this.segment.substr(0, 5)) {
       return;
     }
     
-    if (frameIndex < this.segment[1] - 1) {
-      websocket.send(`${this.segment[0]}_${frameIndex + 1}_labels`);
+    if (frameIndex < this.segmentMetadata.size - 1) {
+      websocket.send(`${this.segment}_${frameIndex + 1}_labels`);
     }
 
     const numCols = 8;
@@ -95,12 +110,12 @@ class DataSocket {
   }
 
   private handlePointCloudMessage(websocket: WebSocket, segmentId: string, frameIndex: number, data: Float32Array) {
-    if (segmentId.substr(0, 5) !== this.segment[0].substr(0, 5)) {
+    if (segmentId.substr(0, 5) !== this.segment.substr(0, 5)) {
       return;
     }
     
-    if (frameIndex < this.segment[1] - 1) {
-      websocket.send(`${this.segment[0]}_${frameIndex + 1}_pointcloud`);
+    if (frameIndex < this.segmentMetadata.size - 1) {
+      websocket.send(`${this.segment}_${frameIndex + 1}_pointcloud`);
     }
 
     const offsets = [];
@@ -147,6 +162,9 @@ class DataSocket {
       } else if (type === 1) {
         // Received binary bounding box data
         this.handleBoundingBoxesMessage(websocket, segmentId.toString(), frameIndex, data);
+      } else if (type === 2) {
+        // Received binary segment metadata
+        this.handleSegmentMetadataMessage(websocket, segmentId.toString(), data);
       }
     }
   }

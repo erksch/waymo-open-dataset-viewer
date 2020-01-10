@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { indices, vertices } from './geometry/cubeGeometry';
-import vertShaderBoundingBox from './shader/vertShaderBoundingBox';
-import fragShaderBoundingBox from './shader/fragShaderBoundingBox';
+import { indices, vertices } from '../geometry/cubeGeometry';
+import vertShaderBoundingBox from '../shader/vertShaderBoundingBox';
+import fragShaderBoundingBox from '../shader/fragShaderBoundingBox';
 
 const material = new THREE.RawShaderMaterial({
   vertexShader: vertShaderBoundingBox,
