@@ -61,9 +61,11 @@ function main() {
     labelMode = labelModes[e.target.value];
   }));
 
+  /*
   colorModeInputs.forEach((el: HTMLInputElement) => el.addEventListener<'change'>('change', (e: any) => {
     colorMode = colorModes[e.target.value];
   }));
+  */
 
   laserInputs.forEach((el: HTMLInputElement) => el.addEventListener<'change'>('change', (e: any) => {
     laserSwitches[el.value] = e.target.checked ? 1.0 : 0.0;
@@ -77,6 +79,7 @@ function main() {
     setActiveFrame(Number(frameSelector.value));
   });
   
+  /*
   runPredictionButton.addEventListener('click', async () => {
     loadingPrediction.style.display = "block";
     runPredictionButton.style.display = "none";
@@ -87,6 +90,7 @@ function main() {
     (framePointMeshes[frameIndex].geometry as BufferGeometry).setAttribute('predictedType', new THREE.InstancedBufferAttribute(new Float32Array(labels), 1));
     ((framePointMeshes[frameIndex].geometry as BufferGeometry).attributes.predictedType as BufferAttribute).needsUpdate = true;
   });
+  */
 
   const handleFrameBoundingBoxesReceived = (index: number, mesh: THREE.Mesh) => {
     frameBoundingBoxMeshes[index] = mesh;
