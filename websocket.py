@@ -1,24 +1,19 @@
-import argparse
-import json
-import logging
 import tensorflow as tf
 import numpy as np
-from functools import partial
-import math
-import os
-import json
 import asyncio
+import os
 import re
 import websockets
-
-print(f"Tensorflow Version: {tf.__version__}")
+import argparse
 
 from waymo_open_dataset.utils import frame_utils, box_utils, transform_utils
 from waymo_open_dataset import dataset_pb2 as open_dataset
 
+print(f"Tensorflow Version: {tf.__version__}")
+
 global_settings = dict()
 global_settings['segments_dir'] = ''
-global_settings['label_points'] = False
+global_settings['label_points'] = True
 
 def get_segment_id(segment_filename):
   return re.search('\w+-(\d+)_.*', segment_filename).group(1)
@@ -208,7 +203,7 @@ if __name__ == '__main__':
 
   parser.add_argument('--segments-dir', type=str, required=True,
                       help='Directory containing the segments (.tfrecord files) to serve.')
-  parser.add_argument('--label-points', action='store_true', default=False,
+  parser.add_argument('--label-points', action='store_true', default=True,
                       help='Whether or not to convert label bounding boxes to point labels (takes more computation time).')
   parser.add_argument('--port', type=str, default=9000,
                       help='Port to run the websocket server on.')
