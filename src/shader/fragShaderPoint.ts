@@ -10,6 +10,7 @@ export default `
   varying float vLaser;
   varying vec3 vColor;
   varying vec3 vPosition;
+  varying vec4 vWorldPosition;
 
   void main() {
     if (vLaser == 0.0 && laserTop == 0.0) discard;

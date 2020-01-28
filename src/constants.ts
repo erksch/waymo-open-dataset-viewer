@@ -1,9 +1,14 @@
-export const colorModes = {
-  LABEL: 0,
-  INTENSITY: 1,
-};
+export enum ColorMode {
+  LABEL,
+  INTENSITY,
+}
 
-export const labelModes = {
-  PREDICTION: 0,
-  GROUND_TRUTH: 1,
-};
+export enum LabelMode {
+  PREDICTION,
+  GROUND_TRUTH,
+}
+
+export enum ObjectDetectionDataMode {
+  SEGMENT_PATH,
+  POINT_CLOUD,
+}

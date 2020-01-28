@@ -5,6 +5,7 @@ import os
 import re
 import websockets
 import argparse
+import math
 
 from waymo_open_dataset.utils import frame_utils, box_utils, transform_utils
 from waymo_open_dataset import dataset_pb2 as open_dataset
@@ -86,10 +87,11 @@ async def transmit_labels(websocket, segment_id, frame_index):
     frame = open_dataset.Frame()
     frame.ParseFromString(bytearray(data.numpy()))
 
-  output = [1, float(int(segment_id)), float(frame_index)]
+  print(frame.timestamp_micros)
+  output = [1, float(int(segment_id)), frame.timestamp_micros - int(frame.timestamp_micros / 100000) * 100000, float(frame_index)]
 
   for label in frame.laser_labels:
-      output.extend((label.box.center_x, label.box.center_y, label.box.center_z, label.box.width, label.box.height, label.box.length, label.box.heading, label.type))
+      output.extend((label.box.center_x, label.box.center_y, label.box.center_z, label.box.width, label.box.length, label.box.height, label.box.heading, label.type))
       
   bytes = np.array(output, dtype=np.float32).tobytes()
   print(f"Sending segment {segment_id} frame {frame_index} labels")
@@ -124,7 +126,7 @@ async def transmit_frame(websocket, segment_id, frame_index):
     boxes = np.array([[
       l.box.center_x, 
       l.box.center_y, 
-      l.box.center_z, 
+      l.box.center_z + 0.13, 
       l.box.length, 
       l.box.width, 
       l.box.height, 
@@ -138,7 +140,7 @@ async def transmit_frame(websocket, segment_id, frame_index):
         tf.convert_to_tensor(boxes, dtype=tf.double)
     ).numpy()
 
-  output = [0, float(int(segment_id)), float(frame_index)]
+  output = [0, float(int(segment_id)), frame.timestamp_micros - int(frame.timestamp_micros / 100000) * 100000, float(frame_index)]
 
   current_laser = 0
   last_laser_index = 0
@@ -149,7 +151,7 @@ async def transmit_frame(websocket, segment_id, frame_index):
       last_laser_index = index
     label = point_labels[index] if global_settings['label_points'] else 0
     x, y, z = point
-    intensity = intensities_all[index]
+    intensity = math.tanh(intensities_all[index])
     output.extend((x, y, z, intensity, current_laser, label))
 
   bytes = np.array(output, dtype=np.float32).tobytes()
@@ -164,8 +166,7 @@ async def transmit_segment_metadata(websocket, segment_id):
   for data in dataset: size += 1
 
   print(f"Sending segment {segment_id} metadata")
-  output = np.array([2, float(int(segment_id)), 0, float(size)], dtype=np.float32)
-  await websocket.send(output.tobytes())
+  await websocket.send(f"1,{segment_id},{size},{os.path.abspath(record_path)}")
 
 async def handleMessage(websocket, message):
   [segment_id, frame_index, type] = re.search('(\d+)_(\d+)_(\w+)', message).groups()
@@ -187,7 +188,7 @@ def main(args):
   segment_ids = [get_segment_id(filename) for filename in segment_filenames]
 
   async def server(websocket, path):
-    await websocket.send(','.join([segment_id for segment_id in segment_ids]))
+    await websocket.send('0,' + ','.join([segment_id for segment_id in segment_ids]))
 
     async for message in websocket:
       await handleMessage(websocket, message)
