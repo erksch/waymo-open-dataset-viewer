@@ -43,7 +43,9 @@ to start a small python server on port 8000 that serves the html file.
 
 ## Known Issues
 
-If you had a GPU with a small RAM, misalignment between the LIDARs can happen. In this case, please try to run websocket using cpu
+If you had a GPU with a small RAM, misalignment between the LIDARs can happen.
+In this case, please try to run the websocket using CPU:
+
 ```
 CUDA_VISIBLE_DEVICES="-1" python websocket.py --segments-dir path/to/segments
 ```
