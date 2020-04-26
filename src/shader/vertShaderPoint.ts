@@ -4,7 +4,7 @@ export default `
   attribute vec3 position;
   attribute vec3 offset;
   attribute float type;
-  attribute float predictedType;
+  attribute float predictedLabel;
   attribute float intensity;
   attribute float laser;
 
@@ -18,6 +18,7 @@ export default `
   varying vec3 vColor;
   varying vec3 vPosition;
   varying float vLaser;
+  varying vec4 vWorldPosition;
 
   vec3 getColorForLabel(float label) {
     vec3 labelColor;
@@ -63,7 +64,7 @@ export default `
       if (labelMode == 1.0) {
         label = type;
       } else {
-        label = predictedType;
+        label = predictedLabel;
       }
 
       vColor = getColorForLabel(label);
@@ -79,6 +80,8 @@ export default `
     vec3 cameraUp = vec3(viewMatrix[0].y, viewMatrix[1].y, viewMatrix[2].y);
     vec3 pos = (cameraRight * position.x * scale) + (cameraUp * position.y * scale);
   
+    vWorldPosition = translationMatrix * vec4(pos, 1.0);
+
     gl_Position = projectionMatrix * modelViewMatrix * translationMatrix * vec4(pos, 1.0);
   }
 `;

@@ -6,11 +6,13 @@ export default `
   attribute vec3 offset;
   attribute vec3 dimension;
   attribute float heading;
+  attribute float isGroundTruth;
 
   uniform mat4 modelViewMatrix;
   uniform mat4 projectionMatrix;
 
   varying vec3 vPosition;
+  varying float vIsGroundTruth;
 
   void main() {
     float theta = PI / 2.0 - heading;
@@ -23,13 +25,15 @@ export default `
 
     mat4 scaleMatrix;
     scaleMatrix[0] = vec4(dimension.x, 0.0, 0.0, 0.0);
-    scaleMatrix[1] = vec4(0.0, dimension.z, 0.0, 0.0);
-    scaleMatrix[2] = vec4(0.0, 0.0, dimension.y, 0.0);
+    scaleMatrix[1] = vec4(0.0, dimension.y, 0.0, 0.0);
+    scaleMatrix[2] = vec4(0.0, 0.0, dimension.z, 0.0);
     scaleMatrix[3] = vec4(0.0, 0.0, 0.0, 1.0);
 
     mat4 modelMatrix = rotationMatrix * scaleMatrix;
 
     vPosition = position;
+    vIsGroundTruth = isGroundTruth;
+
     gl_Position = projectionMatrix * modelViewMatrix * modelMatrix * vec4(position / 2.0, 1.0);
   }
 `;
