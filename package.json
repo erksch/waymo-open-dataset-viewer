@@ -9,7 +9,7 @@
     "serve": "./serve_frontend.sh"
   },
   "dependencies": {
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "three": "^0.111.0",
     "three-orbitcontrols": "^2.110.1"
   },
