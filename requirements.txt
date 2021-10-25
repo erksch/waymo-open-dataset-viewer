@@ -1,2 +1,2 @@
-waymo-open-dataset-tf-2-0-0==1.0.1
+waymo-open-dataset-tf-2-5-0==1.4.1
 websockets==9.1
