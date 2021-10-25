@@ -4,8 +4,6 @@ import { useConfig, useActiveSegment } from '../../state/configReducer';
 import { useDispatch } from 'react-redux';
 import Button from '../utility/Button';
 import Input from '../utility/Input';
-import Switch from '../utility/Switch';
-import { ObjectDetectionDataMode } from '../../constants';
 
 const ObjectDetectionPrediction: React.FC = () => {
   const dispatch = useDispatch();
@@ -104,7 +102,7 @@ const ObjectDetectionPrediction: React.FC = () => {
       <Input
         value={config.objectDetectionServerUrl}
         placeholder="Prediction Server URL"
-        onChange={e =>
+        onChange={(e) =>
           dispatch({
             type: 'SET_OBJECT_DETECTION_SERVER_URL',
             url: e.target.value,

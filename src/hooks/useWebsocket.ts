@@ -80,7 +80,7 @@ function useWebsocket() {
       }
 
       if (frameIndex < activeSegment.metadata.size - 1) {
-        //websocket.send(`${activeSegment.id}_${frameIndex + 1}_pointcloud`);
+        websocket.send(`${activeSegment.id}_${frameIndex + 1}_pointcloud`);
       }
 
       const offsets: number[] = [];
@@ -165,13 +165,8 @@ function useWebsocket() {
           handleSegmentMetadataMessage(data);
         }
       } else {
-        const [
-          type,
-          segmentId,
-          frameTimestamp,
-          frameIndex,
-          ...rest
-        ] = new Float32Array(event.data);
+        const [type, segmentId, frameTimestamp, frameIndex, ...rest] =
+          new Float32Array(event.data);
         const data = new Float32Array(rest);
 
         if (type === 0) {

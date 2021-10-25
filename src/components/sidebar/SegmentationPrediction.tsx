@@ -4,8 +4,6 @@ import { useConfig, useActiveSegment } from '../../state/configReducer';
 import { useDispatch } from 'react-redux';
 import Button from '../utility/Button';
 import Input from '../utility/Input';
-import Switch from '../utility/Switch';
-import { ObjectDetectionDataMode } from '../../constants';
 
 const SegmentationPrediction: React.FC = () => {
   const dispatch = useDispatch();
@@ -34,7 +32,7 @@ const SegmentationPrediction: React.FC = () => {
         type: 'SEGMENT_PREDICTED_LABELS_RECEIVED',
         segmentId: activeSegmentId,
         frameIndex: activeFrame,
-        labels
+        labels,
       });
     } catch (error) {
       setHasError(true);
@@ -85,7 +83,7 @@ const SegmentationPrediction: React.FC = () => {
       <Input
         value={config.segmentationServerUrl}
         placeholder="Prediction Server URL"
-        onChange={e =>
+        onChange={(e) =>
           dispatch({
             type: 'SET_SEGMENTATION_SERVER_URL',
             url: e.target.value,

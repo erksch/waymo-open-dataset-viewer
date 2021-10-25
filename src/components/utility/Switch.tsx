@@ -20,8 +20,12 @@ const Switch: React.FC<Props> = ({
 }) => {
   return (
     <Container style={style}>
-      {options.map(option => (
-        <Option checked={selected === option.value} style={optionStyle}>
+      {options.map((option) => (
+        <Option
+          key={option.value}
+          checked={selected === option.value}
+          style={optionStyle}
+        >
           <input
             type="radio"
             value={option.value}

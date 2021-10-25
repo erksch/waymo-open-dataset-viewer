@@ -21,7 +21,7 @@
     "react-three-fiber": "^4.0.12",
     "redux": "^4.0.5",
     "redux-logger": "^3.0.6",
-    "styled-components": "^5.0.0",
+    "styled-components": "^5.3.3",
     "three": "^0.112.1",
     "typescript": "~3.7.2"
   },

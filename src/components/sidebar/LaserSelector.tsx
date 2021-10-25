@@ -16,13 +16,16 @@ const Border = styled.div`
 const Point = styled.label`
   cursor: pointer;
   position: absolute;
-  background-color: ${(props: { checked: boolean }) => props.checked ? 'hsl(100, 100%, 60%)' : 'gray'};
+  background-color: ${(props: { checked: boolean }) =>
+    props.checked ? 'hsl(100, 100%, 60%)' : 'gray'};
   width: 20px;
   height: 20px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
 
-  input { display: none; }
+  input {
+    display: none;
+  }
 `;
 
 const LaserSelector = () => {
@@ -52,21 +55,18 @@ const LaserSelector = () => {
       left: '0%',
       top: '50%',
     },
-  }
+  };
 
   return (
     <Border>
       {lasers.map((laser: Laser) => (
-        <Point 
-          checked={laserStatus[laser]} 
-          style={styles[laser]}
-        >
-          <input 
-            type="checkbox" 
+        <Point key={laser} checked={laserStatus[laser]} style={styles[laser]}>
+          <input
+            type="checkbox"
             value={laser}
-            checked={laserStatus[laser]} 
+            checked={laserStatus[laser]}
             onChange={() => dispatch({ type: 'TOGGLE_LASER', laser })}
-          />  
+          />
         </Point>
       ))}
     </Border>
