@@ -21,7 +21,7 @@ class BoundingBoxMesh {
     headings: number[],
   ) { 
     this.geometry = new THREE.InstancedBufferGeometry();
-    this.geometry.maxInstancedCount = instances;
+    this.geometry.instanceCount = instances;
     this.geometry.setIndex(indices);
     this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
     this.geometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(offsets), 3));
